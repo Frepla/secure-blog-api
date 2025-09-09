@@ -1,4 +1,4 @@
 package com.wigell.secureblogproject.services;
 
-public class PostServiceIMPL {
+public class PostServiceIMPL implements PostService {
 }
