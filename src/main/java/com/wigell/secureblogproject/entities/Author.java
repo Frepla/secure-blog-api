@@ -6,7 +6,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
-public class User {
+public class Author {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,10 +21,10 @@ public class User {
     @OneToMany(mappedBy = "author", orphanRemoval = true)
     private List<Post> posts;
 
-    public User() {
+    public Author() {
     }
 
-    public User(Long id, String username, String email, List<Post> posts) {
+    public Author(Long id, String username, String email, List<Post> posts) {
         this.id = id;
         this.username = username;
         this.email = email;

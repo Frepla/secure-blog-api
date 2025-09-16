@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
 public class SecurityConfig {
@@ -27,17 +26,18 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth ->
                         auth
-                        .requestMatchers("/api/v2/count").hasRole("blogclient_ADMIN")
-                        .requestMatchers("/api/v2/newpost").hasRole("blogclient_USER")
-                        .requestMatchers("/api/v2/updatepost").hasRole("blogclient_USER")
-                        .requestMatchers("/api/v2/deletepost/**").hasRole("blogclient_USER")
-                        .requestMatchers("/api/v2/posts/**", "/api/v2/post/**").authenticated()
-                        .anyRequest().denyAll()
+                                .requestMatchers("/api/v2/count").hasAuthority("ROLE_blogclient_ADMIN")
+                                .requestMatchers("/api/v2/newpost").hasAuthority("ROLE_blogclient_USER")
+                                .requestMatchers("/api/v2/updatepost").hasAuthority("ROLE_blogclient_USER")
+                                .requestMatchers("/api/v2/deletepost/**").hasAnyAuthority("ROLE_blogclient_USER", "ROLE_blogclient_ADMIN")
+                                .requestMatchers("/api/v2/posts/**", "/api/v2/post/**").authenticated()
+                                .requestMatchers("/error").permitAll()
+                                .anyRequest().denyAll()
                 )
                 .oauth2ResourceServer(oauth2 ->
                         oauth2
                                 .jwt(jwt->jwt.jwtAuthenticationConverter(jwtAuthConverter))
-                        );
-                return http.build();
+                );
+        return http.build();
     }
 }

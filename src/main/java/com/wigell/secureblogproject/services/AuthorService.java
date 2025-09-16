@@ -1,4 +1,4 @@
 package com.wigell.secureblogproject.services;
 
-public interface UserService {
+public interface AuthorService {
 }
