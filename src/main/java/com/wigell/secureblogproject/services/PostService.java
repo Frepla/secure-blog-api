@@ -12,7 +12,7 @@ public interface PostService {
 
     Post getPostById(Long id);
 
-    Post updatePost(PostUpdateRequest request, Author author);
+    Post updatePost(PostUpdateRequest request, Jwt principal);
 
     Post createPost(Post post, Jwt principal);
 

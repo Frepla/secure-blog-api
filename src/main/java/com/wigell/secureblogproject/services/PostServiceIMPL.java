@@ -41,22 +41,14 @@ public class PostServiceIMPL implements PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
     }
 
+    @Override
     public Post createPost(Post post, Jwt principal) {
         String username = principal.getClaim("preferred_username");
-        String email = principal.getClaim("email");
-        String sub = principal.getClaim("sub");
-
-        validatePost(post.getTitle(), post.getContent());
 
         Author author = authorRepository.findByUsername(username)
-                .orElseGet(() -> {
-                    Author newAuthor = new Author();
-                    newAuthor.setUsername(username);
-                    newAuthor.setEmail(email != null ? email : username + "@example.com");
-                    Author savedAuthor = authorRepository.save(newAuthor);
-                    System.out.println("Created new Author: " + savedAuthor);
-                    return savedAuthor;
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Author", "username", username));
+
+        validatePost(post.getTitle(), post.getContent());
 
         LocalDateTime now = LocalDateTime.now();
         post.setAuthor(author);
@@ -64,20 +56,29 @@ public class PostServiceIMPL implements PostService {
         post.setUpdatedAt(now);
 
         Post savedPost = postRepository.save(post);
-        System.out.println("Post created: " + savedPost + " by user with sub: " + sub);
+        System.out.println("New post by user with sub: " + principal.getClaim("sub"));
 
         return savedPost;
     }
 
     @Override
-    public Post updatePost(PostUpdateRequest request, Author author) {
+    public Post updatePost(PostUpdateRequest request, Jwt principal) {
+        String username = principal.getClaim("preferred_username");
+
+        Author author = authorRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Author", "username", username));
+
         Post existingPost = postRepository.findById(request.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", request.getId()));
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_blogclient_ADMIN"));
         boolean isOwner = existingPost.getAuthor() != null && existingPost.getAuthor().getId().equals(author.getId());
 
-        if (!isOwner) {
-            throw new UnauthorizedActionException("post", "update");        }
+        if (!isAdmin && !isOwner) {
+            throw new UnauthorizedActionException("post", "update");
+        }
 
         validatePost(request.getTitle(), request.getContent());
 
@@ -87,6 +88,7 @@ public class PostServiceIMPL implements PostService {
 
         return postRepository.save(existingPost);
     }
+
 
     @Override
     public String deletePostById(Long postId, Jwt principal) {
@@ -102,11 +104,6 @@ public class PostServiceIMPL implements PostService {
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_blogclient_ADMIN"));
         boolean isOwner = existingPost.getAuthor() != null && existingPost.getAuthor().getId().equals(author.getId());
-
-        System.out.println("Username: " + username);
-        System.out.println("Authorities: " + auth.getAuthorities());
-        System.out.println("Post author id: " + (existingPost.getAuthor() != null ? existingPost.getAuthor().getId() : "null"));
-        System.out.println("isAdmin: " + isAdmin + ", isOwner: " + isOwner);
 
         if (!isAdmin && !isOwner) {
             throw new UnauthorizedActionException("post", "delete");        }
