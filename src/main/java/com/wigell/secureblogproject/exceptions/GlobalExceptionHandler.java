@@ -32,11 +32,31 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedActionException ex) {
         Map<String, Object> body = new HashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
         body.put("timestamp", LocalDateTime.now().format(formatter));
         body.put("status", HttpStatus.FORBIDDEN.value());
         body.put("error", HttpStatus.FORBIDDEN.getReasonPhrase());
         body.put("message", ex.getMessage());
+        body.put("object", ex.getObject());
+        body.put("action", ex.getAction());
 
         return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+    }
+
+
+    @ExceptionHandler(InvalidPostException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidPost(InvalidPostException ex) {
+        Map<String, Object> body = new HashMap<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        body.put("timestamp", LocalDateTime.now().format(formatter));
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
+        body.put("message", ex.getMessage());
+        body.put("object", ex.getObject());
+        body.put("field", ex.getField());
+        body.put("value", ex.getValue());
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 }

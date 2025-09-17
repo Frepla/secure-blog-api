@@ -3,14 +3,12 @@ package com.wigell.secureblogproject.controllers;
 import com.wigell.secureblogproject.dto.PostUpdateRequest;
 import com.wigell.secureblogproject.entities.Author;
 import com.wigell.secureblogproject.entities.Post;
+import com.wigell.secureblogproject.exceptions.ResourceNotFoundException;
 import com.wigell.secureblogproject.repositories.AuthorRepository;
-import com.wigell.secureblogproject.repositories.PostRepository;
 import com.wigell.secureblogproject.services.PostService;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,7 +52,7 @@ public class PostController {
         String username = principal.getClaim("preferred_username");
 
         Author author = authorRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Author not found for username: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("Author", "username", username));
 
         Post updatedPost = postService.updatePost(request, author);
         return ok(updatedPost);
@@ -67,7 +65,7 @@ public class PostController {
     }
 
     @GetMapping("/count")
-    public String getPostCount() {
-        return postService.countPosts();
+    public ResponseEntity<String> getPostCount() {
+        return ResponseEntity.ok(postService.countPosts());
     }
 }
