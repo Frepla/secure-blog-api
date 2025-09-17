@@ -18,7 +18,7 @@ public class Author {
     @Column(nullable = false)
     private String email;
 
-    @OneToMany(mappedBy = "author", orphanRemoval = true)
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts;
 
     public Author() {

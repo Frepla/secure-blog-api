@@ -1,9 +1,7 @@
 package com.wigell.secureblogproject.controllers;
 
 import com.wigell.secureblogproject.dto.PostUpdateRequest;
-import com.wigell.secureblogproject.entities.Author;
 import com.wigell.secureblogproject.entities.Post;
-import com.wigell.secureblogproject.exceptions.ResourceNotFoundException;
 import com.wigell.secureblogproject.repositories.AuthorRepository;
 import com.wigell.secureblogproject.services.PostService;
 
@@ -19,6 +17,7 @@ import static org.springframework.http.ResponseEntity.ok;
 @RestController
 @RequestMapping("/api/v2/")
 public class PostController {
+
     private final PostService postService;
     private final AuthorRepository authorRepository;
 
@@ -44,18 +43,14 @@ public class PostController {
 
     @PostMapping("/newpost")
     public ResponseEntity<Post> createPost(@RequestBody Post post, @AuthenticationPrincipal Jwt principal) {
-        return ok(postService.createPost(post, principal));
+        Post createdPost = postService.createPost(post, principal);
+        return ResponseEntity.status(201).body(createdPost);
     }
 
     @PutMapping("/updatepost")
     public ResponseEntity<Post> updatePost(@RequestBody PostUpdateRequest request, @AuthenticationPrincipal Jwt principal) {
-        String username = principal.getClaim("preferred_username");
-
-        Author author = authorRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Author", "username", username));
-
-        Post updatedPost = postService.updatePost(request, author);
-        return ok(updatedPost);
+        Post updatedPost = postService.updatePost(request, principal);
+        return ResponseEntity.ok(updatedPost);
     }
 
     @DeleteMapping("/deletepost/{id}")
