@@ -2,7 +2,6 @@ package com.wigell.secureblogproject.controllers;
 
 import com.wigell.secureblogproject.dto.PostUpdateRequest;
 import com.wigell.secureblogproject.entities.Post;
-import com.wigell.secureblogproject.repositories.AuthorRepository;
 import com.wigell.secureblogproject.services.PostService;
 
 import org.springframework.http.ResponseEntity;
@@ -19,11 +18,9 @@ import static org.springframework.http.ResponseEntity.ok;
 public class PostController {
 
     private final PostService postService;
-    private final AuthorRepository authorRepository;
 
-    public PostController(PostService postService, AuthorRepository authorRepository) {
+    public PostController(PostService postService) {
         this.postService = postService;
-        this.authorRepository = authorRepository;
     }
 
     @GetMapping("/posts")
@@ -32,13 +29,13 @@ public class PostController {
         if (posts.isEmpty()) {
             return ok("There are no posts in the database");
         }
-        return ok(posts);
+        return ResponseEntity.ok(posts);
     }
 
     @GetMapping("/posts/{id}")
     public ResponseEntity<Post> getPostById(@PathVariable Long id) {
         Post post = postService.getPostById(id);
-        return ok(post);
+        return ResponseEntity.ok(post);
     }
 
     @PostMapping("/newpost")

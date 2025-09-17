@@ -71,12 +71,7 @@ public class PostServiceIMPL implements PostService {
         Post existingPost = postRepository.findById(request.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", request.getId()));
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_blogclient_ADMIN"));
-        boolean isOwner = existingPost.getAuthor() != null && existingPost.getAuthor().getId().equals(author.getId());
-
-        if (!isAdmin && !isOwner) {
+        if (!isAdminOrOwner(existingPost, author)) {
             throw new UnauthorizedActionException("post", "update");
         }
 
@@ -89,7 +84,6 @@ public class PostServiceIMPL implements PostService {
         return postRepository.save(existingPost);
     }
 
-
     @Override
     public String deletePostById(Long postId, Jwt principal) {
         String username = principal.getClaim("preferred_username");
@@ -100,13 +94,9 @@ public class PostServiceIMPL implements PostService {
         Post existingPost = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_blogclient_ADMIN"));
-        boolean isOwner = existingPost.getAuthor() != null && existingPost.getAuthor().getId().equals(author.getId());
-
-        if (!isAdmin && !isOwner) {
-            throw new UnauthorizedActionException("post", "delete");        }
+        if (!isAdminOrOwner(existingPost, author)) {
+            throw new UnauthorizedActionException("post", "delete");
+        }
 
         postRepository.delete(existingPost);
         return "Post with id " + postId + " has been deleted successfully";
@@ -116,6 +106,14 @@ public class PostServiceIMPL implements PostService {
     public String countPosts() {
         long count = postRepository.count();
         return "Number of current posts: " + count;
+    }
+
+    private boolean isAdminOrOwner(Post post, Author author) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_blogclient_ADMIN"));
+        boolean isOwner = post.getAuthor() != null && post.getAuthor().getId().equals(author.getId());
+        return isAdmin || isOwner;
     }
 
     private void validatePost(String title, String content) {
